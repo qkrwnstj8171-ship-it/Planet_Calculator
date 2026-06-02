@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> JUNMINI | 플래닛 원정대 계산기 </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+            background-color: #f8fafc;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl font-black text-amber-500 tracking-tighter drop-shadow-sm">JUNMINI</span>
+                    <div class="h-6 w-px bg-slate-300 hidden sm:block"></div>
+                    <h1 class="text-lg font-bold text-slate-800 hidden sm:block">플래닛 원정대 계산기</h1>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <header class="mb-8 text-center sm:text-left">
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-3">원정대 분배금 계산기</h2>
+            <p class="text-slate-500 text-[15px] max-w-3xl leading-relaxed">
+                여러 대원이 각자 판매한 아이템을 모두 합산하여, <strong class="text-slate-700">수수료를 제외한 실수령액 기준</strong>으로 완벽하게 정산합니다. 누가 누구에게 얼마를 보내야 하는지 한눈에 확인하세요.
+            </p>
+        </header>
+
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-2.5 text-slate-500 font-semibold text-sm mb-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg">💰</div>
+                    총 판매 실수령금
+                </div>
+                <div class="text-2xl font-black text-slate-900 truncate" id="dash-total-receive">0 <span class="text-lg font-bold text-slate-400">메소</span></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-amber-50 rounded-bl-full -z-10"></div>
+                <div class="flex items-center gap-2.5 text-amber-600 font-semibold text-sm mb-3">
+                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg">👥</div>
+                    수수료 후 1인 순몫
+                </div>
+                <div class="text-2xl font-black text-amber-600 truncate" id="dash-net-share">0 <span class="text-lg font-bold text-amber-400">메소</span></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-2.5 text-slate-500 font-semibold text-sm mb-3">
+                    <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-lg">🔄</div>
+                    발생 예상 수수료 총합
+                </div>
+                <div class="text-2xl font-black text-slate-900 truncate" id="dash-total-fee">0 <span class="text-lg font-bold text-slate-400">메소</span></div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <div class="lg:col-span-8 space-y-6">
+                
+                <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                원정대 인원 설정
+                            </h3>
+                            <p class="text-sm text-slate-500 mt-1">정산에 참여할 인원과 각 대원의 거래 방식을 설정하세요.</p>
+                        </div>
+                        <button onclick="addMember()" class="group bg-slate-900 text-white hover:bg-amber-500 hover:text-slate-900 text-sm font-bold px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-md">
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            인원 추가
+                        </button>
+                    </div>
+
+                    <div class="hidden sm:grid grid-cols-12 gap-3 px-3 pb-2 text-xs font-semibold text-slate-400 border-b border-slate-100 mb-3">
+                        <div class="col-span-1 text-center">순번</div>
+                        <div class="col-span-5">대원 닉네임</div>
+                        <div class="col-span-5">정산 방식 (받을 때 기준)</div>
+                        <div class="col-span-1 text-center">삭제</div>
+                    </div>
+
+                    <div id="member-container" class="space-y-3">
+                        </div>
+                </div>
+
+                <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                판매 아이템 목록
+                            </h3>
+                            <p class="text-sm text-slate-500 mt-1">판매된 아이템과 <strong class="text-slate-700">실제 인벤토리에 들어온 실수령액</strong>을 입력하세요.</p>
+                        </div>
+                        <button onclick="addItem()" class="group bg-emerald-600 text-white hover:bg-emerald-500 text-sm font-bold px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-md">
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            아이템 추가
+                        </button>
+                    </div>
+
+                    <div class="hidden sm:grid grid-cols-12 gap-3 px-3 pb-2 text-xs font-semibold text-slate-400 border-b border-slate-100 mb-3">
+                        <div class="col-span-4">아이템 명</div>
+                        <div class="col-span-3">판매자 (대금 보유자)</div>
+                        <div class="col-span-4 text-right">판매 실수령금 (메소)</div>
+                        <div class="col-span-1 text-center">삭제</div>
+                    </div>
+
+                    <div id="item-container" class="space-y-3">
+                        </div>
+                </div>
+
+            </div>
+
+            <div class="lg:col-span-4 space-y-6">
+                
+                <div class="bg-slate-900 p-5 sm:p-6 rounded-2xl shadow-xl border border-slate-800 sticky top-24">
+                    <h4 class="text-lg font-black text-amber-400 mb-1 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        최종 송금/수령 리포트
+                    </h4>
+                    <p class="text-slate-400 text-xs mb-4">계산된 순몫에 맞춰 각 대원이 취해야 할 행동입니다.</p>
+                    
+                    <div id="report-container" class="space-y-3 text-sm">
+                        </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 bg-slate-50 border-b border-slate-200">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            정산 방식 및 수수료 안내
+                        </h3>
+                    </div>
+                    <div class="p-5 space-y-5">
+                        <ul class="space-y-3 text-xs text-slate-600 leading-relaxed">
+                            <li class="flex gap-2">
+                                <span class="text-amber-500 font-black">•</span>
+                                <span>정산 시 발생하는 모든 수수료는 원정대 공동의 비용으로 간주하여 <strong class="text-slate-800">최종 순몫에서 공평하게 차감</strong> 계산됩니다.</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <span class="text-amber-500 font-black">•</span>
+                                <span><strong>1:1 교환:</strong> 수령자가 수수료를 부담하므로, 정확한 순몫을 받기 위해 <strong class="text-emerald-600">수수료가 얹혀진 금액을 역산하여 교환창에 청구</strong>하게 됩니다.</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <span class="text-amber-500 font-black">•</span>
+                                <span><strong>택배:</strong> 송금자가 수수료를 부담하므로, 수령자는 <strong class="text-cyan-600">청구 금액 그대로 요청</strong>하면 됩니다 (송금자 인벤토리에서 수수료가 추가 차감됨).</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <h4 class="font-bold text-slate-700 text-xs mb-1">메이플 플래닛 누진 수수료율표</h4>
+                            <p class="text-[10px] text-slate-400 mb-3">※ 금액 구간별로 수수료가 각각 계산되어 합산됩니다.</p>
+                            <div class="space-y-2 text-[11px]">
+                                <div class="flex justify-between text-slate-500 border-b border-slate-200 pb-1">
+                                    <span>금액 구간</span><span>적용 수수료율</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>0 ~ 10만 메소 미만</span><span class="text-rose-500 font-bold">0%</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>10만 ~ 100만 메소 미만</span><span class="text-rose-500 font-bold">0.8%</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>100만 ~ 500만 메소 미만</span><span class="text-rose-500 font-bold">1.8%</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>500만 ~ 1000만 메소 미만</span><span class="text-rose-500 font-bold">3.0%</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>1000만 ~ 2500만 메소 미만</span><span class="text-rose-500 font-bold">4.0%</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>2500만 ~ 1억 메소 미만</span><span class="text-rose-500 font-bold">5.0%</span>
+                                </div>
+                                <div class="flex justify-between text-slate-700">
+                                    <span>1억 메소 이상</span><span class="text-rose-500 font-bold">6.0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p class="text-xs text-slate-500 font-medium">
+                본 유틸리티는 참고용이며 인게임 소수점 처리 방식에 따라 미세한(1~2메소) 오차가 발생할 수 있습니다.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        let memberCount = 0;
+        let itemCount = 0;
+
+        // 누진세 수수료 계산 함수
+        function calculateProgressiveFee(amount) {
+            if (amount <= 0) return 0;
+            let fee = 0;
+            const brackets = [
+                { limit: 100000, rate: 0 },
+                { limit: 1000000, rate: 0.008 },
+                { limit: 5000000, rate: 0.018 },
+                { limit: 10000000, rate: 0.030 },
+                { limit: 25000000, rate: 0.040 },
+                { limit: 100000000, rate: 0.050 },
+                { limit: Infinity, rate: 0.060 }
+            ];
+
+            let prevLimit = 0;
+            for (let b of brackets) {
+                if (amount > prevLimit) {
+                    let taxable = Math.min(amount, b.limit) - prevLimit;
+                    fee += taxable * b.rate;
+                    prevLimit = b.limit;
+                } else {
+                    break;
+                }
+            }
+            return Math.floor(fee);
+        }
+
+        // 1:1 교환 시 (받는 사람이 수수료 부담할 때) 목표액(target)을 수령하기 위해 교환창에 올려야 하는 총 금액 역산
+        function getTradeInputAmount(target) {
+            if (target <= 0) return 0;
+            let x = target;
+            for (let i = 0; i < 20; i++) {
+                let fee = calculateProgressiveFee(x);
+                let net = x - fee;
+                if (net >= target) {
+                    return x;
+                }
+                x += (target - net);
+            }
+            return x;
+        }
+
+        // 숫자 포맷팅 Helper
+        function formatNumber(num) {
+            if (isNaN(num)) return '0';
+            return Math.floor(num).toLocaleString('ko-KR');
+        }
+
+        // 콤마 제거 Helper
+        function parseNumber(str) {
+            if (!str) return 0;
+            return parseFloat(str.replace(/,/g, '')) || 0;
+        }
+
+        // Input 콤마 자동 생성 이벤트
+        function formatInput(el) {
+            let val = parseNumber(el.value);
+            if (val === 0 && el.value.trim() === '') {
+                el.value = '';
+            } else {
+                el.value = formatNumber(val);
+            }
+            calculate();
+        }
+
+        function addMember(name = "") {
+            memberCount++;
+            const container = document.getElementById('member-container');
+            const memberId = `member-${memberCount}`;
+            const defaultName = name || `대원 ${memberCount}`;
+
+            const html = `
+                <div id="${memberId}" class="fade-in group grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-slate-50 sm:bg-transparent p-4 sm:p-0 rounded-xl sm:rounded-none border border-slate-200 sm:border-none relative">
+                    
+                    <div class="sm:col-span-1 flex justify-between sm:justify-center items-center mb-2 sm:mb-0">
+                        <span class="sm:hidden text-xs font-bold text-slate-500">순번</span>
+                        <span class="bg-amber-100 text-amber-700 font-black text-xs w-6 h-6 flex items-center justify-center rounded-md">${memberCount}</span>
+                    </div>
+                    
+                    <div class="sm:col-span-5 flex flex-col sm:block mb-2 sm:mb-0">
+                        <span class="sm:hidden text-xs font-bold text-slate-500 mb-1">대원 닉네임</span>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </div>
+                            <input type="text" value="${defaultName}" oninput="updateMemberSelects(); calculate();" class="member-name w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow">
+                        </div>
+                    </div>
+                    
+                    <div class="sm:col-span-5 flex flex-col sm:block mb-3 sm:mb-0">
+                        <span class="sm:hidden text-xs font-bold text-slate-500 mb-1">정산 방식</span>
+                        <select onchange="calculate()" class="member-type w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow cursor-pointer appearance-none">
+                            <option value="교환">1:1 교환 (수수료 수령자 부담)</option>
+                            <option value="택배" selected>택배 (수수료 송금자 부담)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="sm:col-span-1 flex justify-end sm:justify-center">
+                        <button onclick="removeMember('${memberId}')" class="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors tooltip" title="대원 삭제">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            updateMemberSelects();
+            calculate();
+        }
+
+        function removeMember(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-10px)';
+                el.style.transition = 'all 0.2s';
+                setTimeout(() => {
+                    el.remove();
+                    updateMemberSelects();
+                    calculate();
+                }, 200);
+            }
+        }
+
+        function addItem() {
+            itemCount++;
+            const container = document.getElementById('item-container');
+            const itemId = `item-${itemCount}`;
+
+            const html = `
+                <div id="${itemId}" class="fade-in group grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-slate-50 sm:bg-white p-4 sm:p-2 sm:px-3 rounded-xl border border-slate-200 sm:border-slate-100 sm:hover:border-slate-300 transition-colors">
+                    
+                    <div class="sm:col-span-4 flex flex-col sm:block mb-2 sm:mb-0">
+                        <span class="sm:hidden text-xs font-bold text-slate-500 mb-1">아이템 명</span>
+                        <input type="text" placeholder="예: 자쿰의 투구" class="w-full px-3 py-2 bg-white sm:bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all">
+                    </div>
+                    
+                    <div class="sm:col-span-3 flex flex-col sm:block mb-2 sm:mb-0">
+                        <span class="sm:hidden text-xs font-bold text-slate-500 mb-1">판매자</span>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <span class="text-xs text-slate-400">👤</span>
+                            </div>
+                            <select onchange="calculate()" class="item-seller w-full pl-8 pr-3 py-2 bg-white sm:bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 font-medium focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer appearance-none">
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="sm:col-span-4 flex flex-col sm:block mb-3 sm:mb-0 relative">
+                        <span class="sm:hidden text-xs font-bold text-slate-500 mb-1">실수령금</span>
+                        <input type="text" placeholder="0" oninput="formatInput(this)" class="item-price w-full pl-3 pr-10 py-2 bg-white sm:bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-900 text-right placeholder-slate-300 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 transition-all">
+                        <div class="absolute right-3 top-[32px] sm:top-[9px] text-xs font-medium text-slate-400 pointer-events-none">메소</div>
+                    </div>
+                    
+                    <div class="sm:col-span-1 flex justify-end sm:justify-center">
+                        <button onclick="removeItem('${itemId}')" class="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            updateMemberSelects();
+        }
+
+        function removeItem(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.95)';
+                el.style.transition = 'all 0.2s';
+                setTimeout(() => {
+                    el.remove();
+                    calculate();
+                }, 200);
+            }
+        }
+
+        function updateMemberSelects() {
+            const members = document.querySelectorAll('#member-container > div');
+            const selectBoxes = document.querySelectorAll('.item-seller');
+
+            selectBoxes.forEach(select => {
+                const currentVal = select.value;
+                select.innerHTML = '';
+                
+                members.forEach(m => {
+                    const nameInput = m.querySelector('.member-name');
+                    if (nameInput) {
+                        const name = nameInput.value;
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.text = name;
+                        select.appendChild(option);
+                    }
+                });
+
+                if (currentVal && Array.from(select.options).some(opt => opt.value === currentVal)) {
+                    select.value = currentVal;
+                }
+            });
+        }
+
+        function calculate() {
+            const memberElements = document.querySelectorAll('#member-container > div');
+            const itemElements = document.querySelectorAll('#item-container > div');
+
+            let members = [];
+            memberElements.forEach(m => {
+                const nameInput = m.querySelector('.member-name');
+                const typeSelect = m.querySelector('.member-type');
+                if(nameInput && typeSelect) {
+                    members.push({
+                        name: nameInput.value,
+                        type: typeSelect.value,
+                        holdingAmount: 0,
+                        status: 0
+                    });
+                }
+            });
+
+            if (members.length === 0) {
+                resetDashboards();
+                return;
+            }
+
+            let totalReceive = 0;
+            itemElements.forEach(item => {
+                const sellerSelect = item.querySelector('.item-seller');
+                const priceInput = item.querySelector('.item-price');
+                
+                if (sellerSelect && priceInput) {
+                    const sellerName = sellerSelect.value;
+                    const price = parseNumber(priceInput.value);
+                    
+                    totalReceive += price;
+                    let seller = members.find(m => m.name === sellerName);
+                    if (seller) {
+                        seller.holdingAmount += price;
+                    }
+                }
+            });
+
+            if (totalReceive === 0) {
+                resetDashboards();
+                document.getElementById('report-container').innerHTML = '<div class="text-slate-500 text-center py-4 bg-slate-800/50 rounded-xl border border-slate-700/50">입력된 판매 금액이 없습니다.</div>';
+                return;
+            }
+
+            let totalFee = 0;
+            let netSharePerPerson = Math.floor(totalReceive / members.length);
+            let lastNetShare = 0;
+
+            for (let i = 0; i < 20; i++) {
+                totalFee = 0;
+                members.forEach(m => {
+                    let diff = m.holdingAmount - netSharePerPerson;
+                    if (diff < 0) {
+                        let targetReceive = Math.abs(diff);
+                        if (m.type === '택배') {
+                            let fee = calculateProgressiveFee(targetReceive);
+                            totalFee += fee;
+                        } else if (m.type === '교환') {
+                            let requiredInput = getTradeInputAmount(targetReceive);
+                            let fee = requiredInput - targetReceive;
+                            totalFee += fee;
+                        }
+                    }
+                });
+                netSharePerPerson = Math.floor((totalReceive - totalFee) / members.length);
+                if (Math.abs(netSharePerPerson - lastNetShare) < 1) break;
+                lastNetShare = netSharePerPerson;
+            }
+
+            document.getElementById('dash-total-receive').innerHTML = `${formatNumber(totalReceive)} <span class="text-base font-bold text-slate-400">메소</span>`;
+            document.getElementById('dash-net-share').innerHTML = `${formatNumber(netSharePerPerson)} <span class="text-base font-bold text-amber-500">메소</span>`;
+            document.getElementById('dash-total-fee').innerHTML = `${formatNumber(totalFee)} <span class="text-base font-bold text-slate-400">메소</span>`;
+
+            const reportBox = document.getElementById('report-container');
+            reportBox.innerHTML = '';
+
+            members.forEach(m => {
+                let diff = m.holdingAmount - netSharePerPerson;
+                let div = document.createElement('div');
+                
+                if (diff > 0) {
+                    // 보내야 하는 사람 카드 (깔끔한 영수증형 레이아웃)
+                    div.className = "p-3.5 bg-slate-800 rounded-xl border-l-4 border-rose-500 fade-in shadow-sm flex flex-col gap-1.5";
+                    div.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-rose-500/20 text-rose-400 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide">보내기</span>
+                                <span class="font-bold text-white text-[15px] truncate max-w-[110px]">${m.name}</span>
+                            </div>
+                            <div class="text-rose-400 font-black text-lg tracking-tight">${formatNumber(Math.floor(diff))} <span class="text-xs font-normal text-slate-400">메소</span></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] text-slate-400 border-t border-slate-700/50 pt-1.5 mt-0.5">
+                            <span>보유 중인 판매 대금</span>
+                            <span class="font-medium text-slate-300">${formatNumber(m.holdingAmount)} 메소</span>
+                        </div>
+                    `;
+                } else if (diff < 0) {
+                    let targetReceive = Math.abs(diff);
+                    if (m.type === '택배') {
+                        let actualClaim = targetReceive; 
+                        let feeIncurred = calculateProgressiveFee(targetReceive);
+                        
+                        // 받기 (택배) 카드
+                        div.className = "p-3.5 bg-slate-800 rounded-xl border-l-4 border-cyan-500 fade-in shadow-sm flex flex-col gap-1.5";
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-cyan-500/20 text-cyan-400 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide">받기 (택배)</span>
+                                    <span class="font-bold text-white text-[15px] truncate max-w-[110px]">${m.name}</span>
+                                </div>
+                                <div class="text-cyan-400 font-black text-lg tracking-tight">${formatNumber(actualClaim)} <span class="text-xs font-normal text-slate-400">메소</span></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px] text-slate-400 border-t border-slate-700/50 pt-1.5 mt-0.5">
+                                <span>택배 청구액 <span class="text-[10px] text-slate-500">(송금자 수수료 부담)</span></span>
+                                <span class="font-medium text-slate-300">수수료: ${formatNumber(feeIncurred)}</span>
+                            </div>
+                        `;
+                    } else {
+                        let requiredInput = getTradeInputAmount(targetReceive);
+                        let feeIncurred = requiredInput - targetReceive;
+
+                        // 받기 (교환) 카드
+                        div.className = "p-3.5 bg-slate-800 rounded-xl border-l-4 border-emerald-500 fade-in shadow-sm flex flex-col gap-1.5";
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide">받기 (교환)</span>
+                                    <span class="font-bold text-white text-[15px] truncate max-w-[110px]">${m.name}</span>
+                                </div>
+                                <div class="text-emerald-400 font-black text-lg tracking-tight">${formatNumber(requiredInput)} <span class="text-xs font-normal text-slate-400">메소</span></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px] text-slate-400 border-t border-slate-700/50 pt-1.5 mt-0.5">
+                                <span>교환창 청구액 <span class="text-[10px] text-slate-500">(실수령: ${formatNumber(targetReceive)})</span></span>
+                                <span class="font-medium text-slate-300">+수수료: ${formatNumber(feeIncurred)}</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // 정산 완료 (0원) 카드
+                    div.className = "p-3.5 bg-slate-800/40 rounded-xl border border-slate-700/50 fade-in flex justify-between items-center";
+                    div.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="bg-slate-700 text-slate-300 text-[10px] font-black px-1.5 py-0.5 rounded tracking-wide">완료</span>
+                            <span class="font-bold text-slate-400 text-sm truncate max-w-[110px]">${m.name}</span>
+                        </div>
+                        <div class="text-slate-500 text-xs font-medium">정산 완료 (0 메소)</div>
+                    `;
+                }
+                reportBox.appendChild(div);
+            });
+        }
+
+        function resetDashboards() {
+            document.getElementById('dash-total-receive').innerHTML = `0 <span class="text-base font-bold text-slate-400">메소</span>`;
+            document.getElementById('dash-net-share').innerHTML = `0 <span class="text-base font-bold text-amber-500">메소</span>`;
+            document.getElementById('dash-total-fee').innerHTML = `0 <span class="text-base font-bold text-slate-400">메소</span>`;
+            document.getElementById('report-container').innerHTML = '';
+        }
+
+        window.onload = function() {
+            addMember("대원 1");
+            addMember("대원 2");
+            addMember("대원 3");
+            addMember("대원 4");
+            addItem();
+        }
+    </script>
+</body>
+</html>
